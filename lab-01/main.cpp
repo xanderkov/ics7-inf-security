@@ -2,74 +2,113 @@
 #include <random>
 #include "Encoder.h"
 #include "Enigma.h"
+#include <fstream>
+#include <string>
 #define ALPHABET_NUM 26
 
 int main() {
     uint8_t num_rotors = 3;
 
+    // Setting up Encoder
+    std::string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz";
+    Encoder encoder(alphabet.size(), alphabet);
+    int alphabet_size = alphabet.size();
+    // ------------------------
+
     // Reflectors
-    int reflector_number = rand() % ALPHABET_NUM;
-    std::cout << "Reflector number: " << reflector_number << std::endl;
+    int reflector_number = rand() % alphabet_size;
+
     std::vector<uint8_t> reflector;
-//    = {11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    for (int i = 0; i < ALPHABET_NUM; i++) {
-        reflector.push_back((reflector_number + i) % ALPHABET_NUM);
+    std::cout << "Reflector number: " << reflector_number << std::endl;
+    for (int i = 0; i < alphabet_size; i++) {
+        reflector.push_back((reflector_number + alphabet_size - i) % alphabet_size);
         std::cout << static_cast<int>(reflector[i]) << ", ";
+    }
+    std::cout << std::endl;
+    // -----
+
+    // Commutator
+    int commutator_number = rand() % alphabet_size;
+
+    std::vector<uint8_t> commutator;
+    std::cout << "Commuator number: " << commutator_number << std::endl;
+    for (int i = 0; i < alphabet_size; i++) {
+        commutator.push_back((commutator_number + i) % alphabet_size);
+        std::cout << static_cast<int>(commutator[i]) << ", ";
     }
     std::cout << std::endl;
     // -----
 
     // Rotors
     std::vector<std::vector<uint8_t>> rotors;
-//    =
-//            {
-//                    {17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
-//                    {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2, 3, 4},
-//                    {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-//            };
-    rotors.reserve(num_rotors);
     for (int i = 0; i < num_rotors; i++) {
-        int rotor_number = rand() % ALPHABET_NUM;
+        int rotor_number = rand() % alphabet_size;
         std::cout << "Rotor number: " << rotor_number << std::endl;
-        rotors[i].reserve(ALPHABET_NUM);
-        for (int j = 0; j < ALPHABET_NUM; ++j) {
-            rotors[i][j] = (rotor_number + j) % ALPHABET_NUM;
-            std::cout << static_cast<int>(rotors[i][j]) << ", ";
+        std::vector<uint8_t> rotor;
+        for (int j = 0; j < alphabet_size; ++j) {
+            rotor.push_back((rotor_number + j) % alphabet_size);
+            std::cout << static_cast<int>(rotor[j]) << ", ";
         }
+        rotors.push_back(rotor);
         std::cout << std::endl;
     }
     // --------------------
 
     // Setting up Enigma machine
-    Enigma enigma(ALPHABET_NUM, num_rotors);
-    enigma.set_reflector(reflector);
-    for (int i = 0; i < num_rotors; i++) {
-        enigma.set_rotor(i, rotors[i]);
-    }
+
     // -------------------------
 
-    // Setting up Encoder
-    std::string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    uint8_t size_alpha = alphabet.size();
-    Encoder encoder(size_alpha);
-    encoder.set_alphabet(alphabet);
-    // ------------------------
+
 
     // Starting Enigma machine
     std::string message;
-    std::cout << "Input string (without symbols that doesn't used in alphabet): ";
-    std::cin >> message;
+//    std::cout << "Input string (without symbols that doesn't used in alphabet): ";
+//    std::cin >> message;
 
-    for (auto &symbol: message) {
-        try {
-            uint8_t encoded_ch = encoder.encode(symbol);
-            encoded_ch = enigma.encrypt(encoded_ch);
-            uint8_t decoded_ch = encoder.decode(encoded_ch);
-            std::cout << decoded_ch;
+    std::string line;
+    std::ifstream myfile ("input.txt");
+    if (myfile.is_open())
+    {
+        while ( getline (myfile,line) )
+        {
+            std::vector<uint8_t> new_message;
+            std::cout << "Message: " << line << std::endl;
+            message = line;
+            std::cout << "Encrypted message: ";
+            Enigma enigma(alphabet_size, num_rotors, reflector, rotors, commutator);
 
-        } catch (std::overflow_error &e) {
-            std::cout << e.what() << std::endl;
-        }
+            for (auto &symbol: message) {
+                try {
+                    uint8_t encoded_ch = encoder.encode(symbol);
+                    encoded_ch = enigma.encrypt(encoded_ch);
+                    uint8_t decoded_ch = encoder.decode(encoded_ch);
+                    new_message.push_back(decoded_ch);
+                    std::cout << decoded_ch;
+                } catch (std::overflow_error &e) {
+                    std::cout << e.what() << std::endl;
+                }
+
+            }
+
+            std::cout << std::endl;
+            std::cout << "Decrypted message: ";
+            // Check Enigma work
+            Enigma enigma_two(alphabet_size, num_rotors, reflector, rotors, commutator);
+            for (auto &symbol: new_message) {
+                try {
+                    uint8_t encoded_ch = encoder.encode(symbol);
+                    encoded_ch = enigma_two.encrypt(encoded_ch);
+                    uint8_t decoded_ch = encoder.decode(encoded_ch);
+                    std::cout << decoded_ch;
+                } catch (std::overflow_error &e) {
+                    std::cout << e.what() << std::endl;
+                }
+
+            }
+            std::cout << std::endl;
+
+    }
+        myfile.close();
 
     }
     return 0;

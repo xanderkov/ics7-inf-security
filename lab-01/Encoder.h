@@ -12,9 +12,8 @@
 class Encoder {
 
 public:
-    Encoder(uint8_t alphabet_size);
+    Encoder(uint8_t alphabet_size, std::string new_alphabet);
 
-    void set_alphabet(std::string new_alphabet);
     uint8_t encode(uint8_t symbol);
     uint8_t decode(uint8_t code);
 private:

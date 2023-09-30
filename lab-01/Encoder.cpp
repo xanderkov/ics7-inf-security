@@ -5,15 +5,12 @@
 #include <string>
 #include "Encoder.h"
 
-Encoder::Encoder(uint8_t alphabet_size) : size_alpha{alphabet_size} {
-    alphabet.reserve(alphabet_size);
-}
-
-void Encoder::set_alphabet(std::string new_alphabet) {
+Encoder::Encoder(uint8_t alphabet_size, std::string new_alphabet) : size_alpha{alphabet_size} {
     for (int i = 0; i < size_alpha; i++) {
-        alphabet[i] = new_alphabet[i];
+        alphabet.push_back(new_alphabet[i]);
     }
 }
+
 
 uint8_t Encoder::encode(uint8_t symbol) {
     for (int i = 0; i < size_alpha; ++i) {

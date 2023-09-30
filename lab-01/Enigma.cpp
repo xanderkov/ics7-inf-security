@@ -5,26 +5,25 @@
 #include "Enigma.h"
 #include <iostream>
 
-Enigma::Enigma(uint8_t size_rotor, uint8_t num_rotors) :
+Enigma::Enigma(uint8_t size_rotor,
+               uint8_t num_rotors,
+               const std::vector<uint8_t>& reflector_place,
+               const std::vector<std::vector<uint8_t>>& rotors_place,
+               const std::vector<uint8_t>& commutator_place) :
     size_rotor{size_rotor}, num_rotors{num_rotors} {
 
     reflector.reserve(size_rotor);
-    rotors.reserve(num_rotors);
-
-}
-
-void Enigma::set_reflector(std::vector<uint8_t> reflector_place) {
-    for (int i = 0; i < size_rotor; ++i) {
-        reflector.push_back(reflector_place[i]);
+    for (const auto &reflect: reflector_place) {
+        reflector.push_back(reflect);
+    }
+    for (const auto &rotor: rotors_place) {
+        rotors.push_back(rotor);
+    }
+    for (const auto &comm: commutator_place) {
+        commutator.push_back(comm);
     }
 }
 
-void Enigma::set_rotor(uint8_t num, const std::vector<uint8_t>& rotor) {
-    rotors.push_back(rotor);
-    for (int i = 0; i < size_rotor; ++i) {
-        rotors[num].push_back(rotor[i]);
-    }
-}
 
 uint8_t Enigma::find_rotor(uint8_t num, uint8_t code) {
     for (int i = 0; i < size_rotor; ++i) {
@@ -44,13 +43,18 @@ void Enigma::rotor_shift(uint8_t num) {
 }
 
 uint8_t Enigma::encrypt(uint8_t code) {
-    uint64_t rotor_queue;
-    uint8_t new_code;
+    uint64_t rotor_queue = 1;
+    uint8_t new_code = code;
 
     if (code > size_rotor) {
         throw std::out_of_range("Code bigger than size of rotor");
     }
-    new_code = code;
+    new_code = commutator[new_code];
+
+    for (auto &rotor: rotors) {
+        new_code = rotor[new_code];
+    }
+    new_code = reflector[new_code];
 
     for (int i = num_rotors - 1; i >= 0; --i) {
         try {
@@ -61,7 +65,6 @@ uint8_t Enigma::encrypt(uint8_t code) {
         }
     }
 
-    rotor_queue = 1;
     counter++;
     for (int i = 0; i < num_rotors; ++i) {
         if (counter % rotor_queue == 0) {
@@ -69,6 +72,8 @@ uint8_t Enigma::encrypt(uint8_t code) {
         }
         rotor_queue *= size_rotor;
     }
+    new_code = commutator[new_code];
+
     return new_code;
 }
 

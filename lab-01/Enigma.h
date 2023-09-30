@@ -15,9 +15,12 @@ class Enigma {
 
 
 public:
-    Enigma(uint8_t size_rotor, uint8_t num_rotors);
-    void set_reflector(std::vector<uint8_t> reflector);
-    void set_rotor(uint8_t num, const std::vector<uint8_t>& rotor);
+    Enigma(uint8_t size_rotor,
+           uint8_t num_rotors,
+           const std::vector<uint8_t>& reflector_place,
+           const std::vector<std::vector<uint8_t>>& rotors_place,
+           const std::vector<uint8_t>& commutator_place);
+
     uint8_t encrypt(uint8_t code);
 
 private:
@@ -28,6 +31,7 @@ private:
     uint8_t size_rotor;
     uint8_t num_rotors;
     std::vector<uint8_t> reflector;
+    std::vector<uint8_t> commutator;
     std::vector<std::vector<uint8_t>> rotors;
 };
 
