@@ -8,4 +8,5 @@ include_directories(.)
 add_executable(lab_02
         main.cpp
         PCBC.cpp
-        Des.cpp)
+        Des.cpp
+        Tables.cpp)

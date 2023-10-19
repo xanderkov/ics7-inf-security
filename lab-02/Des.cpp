@@ -3,301 +3,58 @@
 //
 
 #include "Des.h"
+#include <valarray>
+#include <bitset>
 
-void Des::expansion_function(int pos, int text)
-{
-    for (int i = 0; i < 48; i++)
-    {
-        if (E[i] == pos + 1) {
-            EXPtext[i] = text;
+
+std::vector<std::vector<unsigned> > Des::generate_key(std::vector<unsigned int> key) {
+    std::vector<std::vector<unsigned > > ret_key;
+    std::vector<unsigned > C = table.permuteC0(key);
+    std::vector<unsigned > D = table.permuteD0(key);
+    for (int i = 0; i < 16; ++i) {
+        for (int j = 0; j < C.size(); j++) {
+            C[j] = C[j] << table.SI[i];
+            D[j] = D[j] << table.SI[i];
+            auto sumlabmda = [](auto a, auto b){ return a + b; };
+            std::vector<unsigned > newKey = table.permuteCP(sumVectors(C, D, sumlabmda));
+            ret_key.push_back(newKey);
         }
     }
+    return ret_key;
 }
 
-int Des::initialPermutation(int pos, int text)
-{
-    int i;
-    for (i = 0; i < 64; i++)
-    {
-        if (IP[i] == pos + 1) {
-            break;
-        }
-    }
-    IPtext[i] = text;
+std::vector<unsigned> Des::encode(std::vector<unsigned int> bitsArray) {
+    return std::vector<unsigned int>();
 }
 
-
-int Des::F1(int i)
-{
-    int r, c, b[6];
-
-    for (int j = 0; j < 6; j++) {
-        b[j] = X[i][j];
-    }
-
-    r = b[0] * 2 + b[5];
-    c = 8 * b[1] + 4 * b[2] + 2 * b[3] + b[4];
-
-    if (i == 0) {
-        return S1[r][c];
-    }
-    else if (i == 1) {
-        return S2[r][c];
-    }
-    else if (i == 2) {
-        return S3[r][c];
-    }
-    else if (i == 3) {
-        return S4[r][c];
-    }
-    else if (i == 4) {
-        return S5[r][c];
-    }
-    else if (i == 5) {
-        return S6[r][c];
-    }
-    else if (i == 6) {
-        return S7[r][c];
-    }
-    else if (i == 7) {
-        return S8[r][c];
-    }
-}
-
-int Des::XOR(int a, int b) {
-    return (a ^ b);
-}
-
-int Des::ToBits(int value) {
-    int k, j, m;
-    static int i;
-
-    if (i % 32 == 0) {
-        i = 0;
-    }
-
-    for (j = 3; j >= 0; j--)
-    {
-        m = 1 << j;
-        k = value & m;
-        if (k == 0) {
-            X2[3 - j + i] = '0' - 48;
-        }
-        else {
-            X2[3 - j + i] = '1' - 48;
-        }
-    }
-
-    i = i + 4;
-}
-
-int Des::SBox(int *XORtext) {
-    int k = 0;
-    for (int i = 0; i < 8; i++)
-    {
-        for (int j = 0; j < 6; j++) {
-            X[i][j] = XORtext[k++];
-        }
-    }
-
-    int value;
-    for (int i = 0; i < 8; i++)
-    {
-        value = F1(i);
-        ToBits(value);
-    }
-}
-
-int Des::PBox(int pos, int text) {
-    int i;
-    for (i = 0; i < 32; i++)
-    {
-        if (P[i] == pos + 1) {
-            break;
-        }
-    }
-    R[i] = text;
-}
-
-void Des::cipher(int Round, int mode) {
-    for (int i = 0; i < 32; i++) {
-        expansion_function(i, RIGHT[Round - 1][i]);
-    }
-
-    for (int i = 0; i < 48; i++)
-    {
-        if (mode == 0) {
-            XORtext[i] = XOR(EXPtext[i], key48bit[Round][i]);
-        }
-        else {
-            XORtext[i] = XOR(EXPtext[i], key48bit[17 - Round][i]);
-        }
-    }
-
-    SBox(XORtext);
-
-    for (int i = 0; i < 32; i++) {
-        PBox(i, X2[i]);
-    }
-
-    for (int i = 0; i < 32; i++) {
-        RIGHT[Round][i] = XOR(LEFT[Round - 1][i], R[i]);
-    }
-}
-
-void Des::finalPermutation(int pos, int text) {
-    int i;
-    for (i = 0; i < 64; i++)
-    {
-        if (FP[i] == pos + 1) {
-            break;
-        }
-    }
-    ENCRYPTED[i] = text;
+std::vector<unsigned> Des::decode(std::vector<unsigned int> bitsArray) {
+    return std::vector<unsigned int>();
 }
 
 
+std::vector<unsigned> Des::funcFeistel(std::vector<unsigned int> bitsArray, std::vector<unsigned int> key) {
+    std::vector<unsigned > E = table.permuteCP(bitsArray);
+    std::bitset<48> e_bit, key_bit;
+    int t = 0;
+    std::for_each(E.begin() + 20, E.begin() + 57, [&](uint8_t val) { e_bit[i] = val; ++t; });
+    t = 0;
+    std::for_each(key.begin() + 20, key.begin() + 57, [&](uint8_t val) { key_bit[i] = val; ++t; });
+    std::bitset<48> Z = e_bit ^ key_bit;
 
-void Des::key64to48(unsigned int *key) {
-    int k, backup[17][2];
-    int CD[17][56];
-    int C[17][28], D[17][28];
+    std::vector<unsigned > sBl;
+    std::bitset<32> sBlocks;
 
-    for (int i = 0; i < 64; i++) {
-        key64to56(i, key[i]);
+    for (int k = 0; k < 8; k++) {
+        std::bitset<6> bits = Z >> (k * 6);
+        bits &= 0x3F;
+        std::bitset<2> iBits = bits[0] << 1 | bits[5];
+        std::bitset<4> jBits = bits >> 1;
+        unsigned i = iBits.to_ullong();
+        unsigned j = jBits.to_ullong();
+        unsigned sbl = table.permuteSBlock(k, i * 16 + j);
+        std::bitset<32> sBlockBits(sbl);
+        sBlocks |= (sBlockBits << (28 - k * 4));
     }
-
-    for (int i = 0; i < 56; i++)
-    {
-        if (i < 28) {
-            C[0][i] = key56bit[i];
-        }
-        else {
-            D[0][i - 28] = key56bit[i];
-        }
-    }
-
-    for (int x = 1; x < 17; x++)
-    {
-        int shift = SHIFTS[x - 1];
-
-        for (int i = 0; i < shift; i++) {
-            backup[x - 1][i] = C[x - 1][i];
-        }
-
-        for (int i = 0; i < (28 - shift); i++) {
-            C[x][i] = C[x - 1][i + shift];
-        }
-
-        k = 0;
-        for (int i = 28 - shift; i < 28; i++) {
-            C[x][i] = backup[x - 1][k++];
-        }
-
-        for (int i = 0; i < shift; i++) {
-            backup[x - 1][i] = D[x - 1][i];
-        }
-
-        for (int i = 0; i < (28 - shift); i++) {
-            D[x][i] = D[x - 1][i + shift];
-        }
-
-        k = 0;
-        for (int i = 28 - shift; i < 28; i++) {
-            D[x][i] = backup[x - 1][k++];
-        }
-    }
-
-    for (int j = 0; j < 17; j++)
-    {
-        for (int i = 0; i < 28; i++) {
-            CD[j][i] = C[j][i];
-        }
-
-        for (int i = 28; i < 56; i++) {
-            CD[j][i] = D[j][i - 28];
-        }
-    }
-
-    for (int j = 1; j < 17; j++)
-    {
-        for (int i = 0; i < 56; i++) {
-            key56to48(j, i, CD[j][i]);
-        }
-    }
-
 }
 
-int Des::key64to56(int pos, int text) {
-    int i;
-    for (i = 0; i < 56; i++)
-    {
-        if (PC1[i] == pos + 1) {
-            break;
-        }
-    }
-    key56bit[i] = text;
-}
-
-void Des::key56to48(int round, int pos, int text) {
-    int i;
-    for (i = 0; i < 56; i++)
-    {
-        if (PC2[i] == pos + 1) {
-            break;
-        }
-    }
-    key48bit[round][i] = text;
-}
-
-void Des::generate_key(std::string key) {
-    unsigned int c_key[key.length()];
-    char ch;
-    for (int i = 0; i < key.length(); i++)
-    {
-        ch = key[i];
-        c_key[i++] = ch - 48;
-    }
-
-    key64to48(c_key);
-}
-
-std::string Des::encrypt(std::string plain) {
-
-    for (int i = 0; i < 64; i++) {
-        initialPermutation(i, plain[i]);
-    }
-
-    for (int i = 0; i < 32; i++) {
-        LEFT[0][i] = IPtext[i];
-    }
-
-    for (int i = 32; i < 64; i++) {
-        RIGHT[0][i - 32] = IPtext[i];
-    }
-
-    for (int k = 1; k < 17; k++)
-    {
-        cipher(k, 0);
-
-        for (int i = 0; i < 32; i++)
-            LEFT[k][i] = RIGHT[k - 1][i];
-    }
-
-    for (int i = 0; i < 64; i++)
-    {
-        if (i < 32) {
-            CIPHER[i] = RIGHT[16][i];
-        }
-        else {
-            CIPHER[i] = LEFT[16][i - 32];
-        }
-        finalPermutation(i, CIPHER[i]);
-    }
-    std::string ret;
-    for (int i = 0; i < 64; i++) {
-        ret.push_back(ENCRYPTED[i]);
-    }
-    return ret;
-}
 

@@ -24,10 +24,12 @@ std::vector<std::string> PCBC::encrypt(std::vector<std::string> blocks, std::str
 
 std::string PCBC::blocks_xor(std::string left, std::string right) {
     std::string xor_c;
+    std::vector<char> degug;
     for (int i = 0; i < 16; i++) {
         char c1 = left[i];
         char c2 = right[i];
         xor_c.push_back(c1 ^ c2);
+        degug.push_back(c1 ^ c2);
     }
     return xor_c;
 }
