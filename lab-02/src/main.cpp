@@ -11,8 +11,8 @@
 
 std::vector<int> initVector = {1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1};
 
-std::pair<std::vector<std::vector<int>>, size_t> fileToMessageBlocks(const std::string& filename_in) {
-    std::ifstream file(filename_in, std::ios::binary);
+std::pair<std::vector<std::vector<int>>, size_t> fileToMessageBlocks(const std::string& filenameIn) {
+    std::ifstream file(filenameIn, std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open file");
     }
@@ -50,7 +50,7 @@ std::pair<std::vector<std::vector<int>>, size_t> fileToMessageBlocks(const std::
     return std::pair(messageBinaryBlocks, truncateBytesCount);
 }
 
-void messageBlocksToFile(std::string filename_out, std::vector<std::vector<int>> messageBlocks, size_t truncateBytesCount) {
+void messageBlocksToFile(std::string filenameOut, std::vector<std::vector<int>> messageBlocks, size_t truncateBytesCount) {
     std::vector<std::string> messageBinary;
 
     for (int i = 0; i < int(messageBlocks.size()) - 1; i++) {
@@ -84,15 +84,16 @@ void messageBlocksToFile(std::string filename_out, std::vector<std::vector<int>>
         messageBytes.push_back(static_cast<unsigned char>(x));
     }
 
-    std::ofstream f_out(filename_out, std::ios::binary);
+    std::ofstream f_out(filenameOut, std::ios::binary);
     for (const auto& x : messageBytes) {
         f_out.write(reinterpret_cast<const char*>(&x), 1);
     }
     f_out.close();
 }
 
-size_t encipherFile(std::vector<std::vector<int>> keys, std::string filename_in, std::string filename_out, int direction, size_t truncateBytesCount) {
-    auto res = fileToMessageBlocks(filename_in);
+size_t encipherFile(std::vector<std::vector<int>> keys,
+                    const std::string &filenameIn, const std::string &filenameOut, int direction, size_t truncateBytesCount) {
+    auto res = fileToMessageBlocks(filenameIn);
     std::vector<std::vector<int>> messageBlocks = res.first;
 
     Cryptographer cryptographer;
@@ -101,14 +102,25 @@ size_t encipherFile(std::vector<std::vector<int>> keys, std::string filename_in,
     size_t messageBlocksSize = messageBlocks.size();
     auto initVectorCopy = initVector;
     for (size_t i = 0; i < messageBlocksSize; i++) {
-        initVectorCopy = cryptographer.encipher(keys, initVectorCopy, ENCIPHER);
-        encipheredBlocks.push_back(xorForTwoLists(initVectorCopy, messageBlocks[i]));
+        if (direction == ENCIPHER) {
+            auto decoded_block = xorForTwoLists(initVectorCopy, messageBlocks[i]);
+            auto encode = cryptographer.encipher(keys, decoded_block, direction);
+            encipheredBlocks.push_back(encode);
+            initVectorCopy = xorForTwoLists(encode, messageBlocks[i]);
+        }
+        else {
+            auto decode = cryptographer.encipher(keys, messageBlocks[i], direction);
+            decode = xorForTwoLists(initVectorCopy, decode);
+            initVectorCopy = xorForTwoLists(decode, messageBlocks[i]);
+            encipheredBlocks.push_back(decode);
+        }
+
     }
 
     if (direction == DECIPHER) {
-        messageBlocksToFile(filename_out, encipheredBlocks, truncateBytesCount);
+        messageBlocksToFile(filenameOut, encipheredBlocks, truncateBytesCount);
     } else {
-        messageBlocksToFile(filename_out, encipheredBlocks, 0);
+        messageBlocksToFile(filenameOut, encipheredBlocks, 0);
     }
 
     return res.second;
