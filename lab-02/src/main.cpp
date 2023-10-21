@@ -114,7 +114,6 @@ size_t encipherFile(std::vector<std::vector<int>> keys,
             initVectorCopy = xorForTwoLists(decode, messageBlocks[i]);
             encipheredBlocks.push_back(decode);
         }
-
     }
 
     if (direction == DECIPHER) {

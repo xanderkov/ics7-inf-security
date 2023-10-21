@@ -45,7 +45,7 @@ private:
         }
         return permutatedMessage;
     }
-    
+
 public:
     std::vector<int> encipher(const std::vector<std::vector<int>>& keys, const std::vector<int>& message, int direction) {
         std::vector<int> permutatedMessage = applyInitialPermutationIP(message);
