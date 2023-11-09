@@ -83,6 +83,7 @@ void unitDecrypt(uchar list[16], uchar *preC)
 
 }
 
+
 void unitEncrypt(uchar list[16], uchar *preC)
 {
     //the suffix of list
@@ -145,31 +146,6 @@ void unitEncrypt(uchar list[16], uchar *preC)
 }
 
 
-void decrypt(FILE *inputData, FILE *outputData)
-{
-    //input list of 16 bytes
-    uchar list[16];
-    int suffix=0;
-    uchar IV[16] = {0x00};
-    uchar *preC = IV;
-    uchar thisC[16] = {0x00};
-    fread(preC,16,1,inputData);
-    while(fread(list,16,1,inputData)==1)
-    {
-        for(int i=0;i<16;i++)
-            thisC[i] = list[i];
-        unitDecrypt(list, preC);
-        for(int i=0;i<16;i++)
-            preC[i] = thisC[i];
-        fwrite(list,16,1,outputData);
-    }
-
-    fclose(inputData);
-    fclose(outputData);
-}
-
-
-
 void encrypt(FILE *inputData, FILE *outputData)
 {
     //input list of 16 bytes
@@ -181,8 +157,8 @@ void encrypt(FILE *inputData, FILE *outputData)
     while(fread(list,16,1,inputData)==1)
     {
         unitEncrypt(list, preC);
-        for(int i=0;i<16;i++)
-            preC[i] = list[i];
+//        for(int i=0;i<16;i++)
+//            preC[i] = list[i];
         fwrite(list,16,1,outputData);
     }
 
@@ -205,6 +181,30 @@ void encrypt(FILE *inputData, FILE *outputData)
     fclose(inputData);
     fclose(outputData);
 }
+
+void decrypt(FILE *inputData, FILE *outputData)
+{
+    //input list of 16 bytes
+    uchar list[16];
+    int suffix=0;
+    uchar IV[16] = {0x00};
+    uchar *preC = IV;
+    uchar thisC[16] = {0x00};
+    fread(preC,16,1,inputData);
+    while(fread(list,16,1,inputData)==1)
+    {
+//        for(int i=0;i<16;i++)
+//            thisC[i] = list[i];
+        unitDecrypt(list, preC);
+//        for(int i=0;i<16;i++)
+//            preC[i] = thisC[i];
+        fwrite(list,16,1,outputData);
+    }
+
+    fclose(inputData);
+    fclose(outputData);
+}
+
 
 int main()
 {
