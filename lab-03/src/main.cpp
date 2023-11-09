@@ -157,8 +157,6 @@ void encrypt(FILE *inputData, FILE *outputData)
     while(fread(list,16,1,inputData)==1)
     {
         unitEncrypt(list, preC);
-//        for(int i=0;i<16;i++)
-//            preC[i] = list[i];
         fwrite(list,16,1,outputData);
     }
 
