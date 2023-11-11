@@ -191,11 +191,7 @@ void decrypt(FILE *inputData, FILE *outputData)
     fread(preC,16,1,inputData);
     while(fread(list,16,1,inputData)==1)
     {
-//        for(int i=0;i<16;i++)
-//            thisC[i] = list[i];
         unitDecrypt(list, preC);
-//        for(int i=0;i<16;i++)
-//            preC[i] = thisC[i];
         fwrite(list,16,1,outputData);
     }
 
