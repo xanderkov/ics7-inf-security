@@ -10,8 +10,6 @@ bool prime(largeIntegerType n);
 
 largeIntegerType fastPow(largeIntegerType a, largeIntegerType step, largeIntegerType mod);
 
-std::string to_string(std::vector <largeIntegerType> a);
-
 
 largeIntegerType gcd(largeIntegerType a, largeIntegerType b)
 {
@@ -52,11 +50,4 @@ largeIntegerType fastPow(largeIntegerType a, largeIntegerType step, largeInteger
 	b %= mod;
 	return (b * b)%mod;
   }
-}
-
-std::string to_string(std::vector <largeIntegerType> a)
-{
-  std::string ans;
-  for (auto i:a) ans+= i + '0';
-  return ans;
 }

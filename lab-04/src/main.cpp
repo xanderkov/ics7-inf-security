@@ -51,14 +51,14 @@ int main(int argc, const char **argv)
 
 	if (outf)
 	{
-		for (long long num : sign) 
+		for (long long num : sign)
 		{
 			outf << num;
 		}
 
 		outf.close();
 	}
-	else 
+	else
 	{
 		std::cerr << "Ошибка при открытии файла" << std::endl;
 	}
