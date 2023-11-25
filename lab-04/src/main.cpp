@@ -72,9 +72,19 @@ int main(int argc, const char **argv)
     }
 	std::cout << ">" << std::endl << std::endl;
 
+	std::ifstream file2(filename, std::ios::binary);
+
+	std::string input2;
+	while (file.read(&byte, sizeof(char)))
+	{
+	  input2 += byte;
+	}
+
+	file2.close();
+
     // Signature verification
     SHA1 originalChecksum;
-    originalChecksum.update(input);
+    originalChecksum.update(input2);
     const std::string originalHash = originalChecksum.final();
 
 	std::string signatureHash = encryptMessage(sign, keys._public);
