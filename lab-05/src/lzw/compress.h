@@ -12,9 +12,8 @@
 #include <bit>
 #include <iostream>
 
-class TrieNode
+struct TrieNode
 {
- public:
 	uint32_t code;
 	std::unordered_map<uint8_t, TrieNode> children;
 };

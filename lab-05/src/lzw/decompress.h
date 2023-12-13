@@ -49,9 +49,6 @@ class LzwDecompressService
 				bytesRead++;
 			}
 		}
-#ifdef _DEBUG
-		std::cout << "\u001b[31mcode: " << code << " \u001b[0m" << std::endl;
-#endif
 		return code;
 	}
 
