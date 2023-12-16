@@ -10,7 +10,7 @@
 
 void printUsage()
 {
-	printf("lzw compress | decompress {source} {destination}");
+	printf("lzw {compress | decompress} {source} {destination}");
 }
 
 // usage:
@@ -40,51 +40,37 @@ int main(int argc, char** argv)
 	if (!inFile || !outFile)
 	{
 		std::cout << "file stream error" << std::endl;
-		return false;
+		return 1;
 	}
+
+	inFile.seekg(0, std::ios::end);
+	long long fileSize = inFile.tellg();
+	inFile.seekg(0, std::ios::beg);
+
+	std::vector<uint8_t> inData(fileSize);
+	std::vector<uint8_t> outData;
+	inFile.read((char*)(&inData[0]), fileSize);
 
 	if (std::string(op) == "compress")
 	{
 		LzwCompressService compressService;
-
-		inFile.seekg(0, std::ios::end);
-		size_t fileSize = inFile.tellg();
-		inFile.seekg(0, std::ios::beg);
-
-		std::vector<uint8_t> inData(fileSize);
-		std::vector<uint8_t> outData;
-		inFile.read((char*)(&inData[0]), fileSize);
-
 		compressService.compress(inData, outData);
-
-		outFile.write((char*)(&outData[0]), outData.size());
-		//        bool result = manager.encode(input, output);
-		//        exit(!result);
+		auto size = float(inData.size() - outData.size()) / inData.size() * 100;
+		std::cout << "Процент compress: " << size << "%";
 	}
 	else if (std::string(op) == "decompress")
 	{
 		LzwDecompressService decompressService;
-
-		inFile.seekg(0, std::ios::end);
-		size_t fileSize = inFile.tellg();
-		inFile.seekg(0, std::ios::beg);
-
-		std::vector<uint8_t> inData(fileSize);
-		std::vector<uint8_t> outData;
-		inFile.read((char*)(&inData[0]), fileSize);
-
 		decompressService.decompress(inData, outData);
-
-		outFile.write((char*)(&outData[0]), outData.size());
-
-		//        bool result = manager.decode(input, output);
-		//        exit(!result);
+		auto size = 1 - float(outData.size() - inData.size()) / outData.size();
+		std::cout << "Процент  decompress: " << size << "%";
 	}
 	else
 	{
 		printUsage();
 		exit(1);
 	}
+	outFile.write((char*)(&outData[0]), outData.size());
 
 	return 0;
 }
