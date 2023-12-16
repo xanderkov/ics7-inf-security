@@ -55,15 +55,15 @@ int main(int argc, char** argv)
 	{
 		LzwCompressService compressService;
 		compressService.compress(inData, outData);
-		auto size = float(inData.size() - outData.size()) / inData.size() * 100;
-		std::cout << "Процент compress: " << size << "%";
+		auto size = float(inData.size()) / outData.size();
+		std::cout << "Коэффициент compress: " << size;
 	}
 	else if (std::string(op) == "decompress")
 	{
 		LzwDecompressService decompressService;
 		decompressService.decompress(inData, outData);
-		auto size = 1 - float(outData.size() - inData.size()) / outData.size();
-		std::cout << "Процент  decompress: " << size << "%";
+		auto size = float(outData.size()) / inData.size();
+		std::cout << "Коэффициент decompress: " << size << "%";
 	}
 	else
 	{
